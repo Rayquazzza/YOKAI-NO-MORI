@@ -1,15 +1,19 @@
 using System;
 using UnityEngine;
+using YokaiNoMori.Interface;
 
 public class InputService : MonoBehaviour, IInputService
 {
-    public event Action<BoardCaseView> OnCellHoverChanged;
-    public event Action<BoardCaseView> OnCellLeftClicked;
-    public event Action<BoardCaseView> OnCellRightClicked;
+    public event Action<CaseView> OnCellHoverChanged;
+    public event Action<CaseView> OnCellLeftClicked;
+    public event Action<CaseView> OnCellRightClicked;
+    public event Action<IPawn> OnReservePawnClicked;
 
-    private BoardCaseView lastHovered;
+    private CaseView lastHovered;
 
     private IGameStateService gameStateService;
+
+   [SerializeField] private LayerMask boardLayerMask;
 
 
     private void Awake()
@@ -24,7 +28,7 @@ public class InputService : MonoBehaviour, IInputService
 
     private void Update()
     {
-        if (gameStateService == null || gameStateService.GetCurrentGameState() != EGameState.IN_GAME) return;
+        //if (gameStateService == null || gameStateService.GetCurrentGameState() != EGameState.IN_GAME) return;
 
         HandleMouseDetection();
     }
@@ -34,9 +38,9 @@ public class InputService : MonoBehaviour, IInputService
     {
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
 
-        if (Physics.Raycast(ray, out RaycastHit hit))
+        if (Physics.Raycast(ray, out RaycastHit hit, boardLayerMask))
         {
-            BoardCaseView current = hit.collider.GetComponentInParent<BoardCaseView>();
+            CaseView current = hit.collider.GetComponentInParent<CaseView>();
 
             if (current != lastHovered)
             {

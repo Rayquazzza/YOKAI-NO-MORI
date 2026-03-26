@@ -1,7 +1,7 @@
 using UnityEngine;
 using YokaiNoMori.Interface;
 
-public class BoardCaseView : MonoBehaviour
+public class CaseView : MonoBehaviour
 {
     private IBoardCase model;
     private Renderer caseRenderer;

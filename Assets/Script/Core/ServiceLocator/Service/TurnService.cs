@@ -24,6 +24,12 @@ public class TurnService : ITurnService
         
     }
 
+    public void SetStartingPlayer(ECampType startingCamp)
+    {
+        CurrentPlayer = startingCamp;
+        Debug.Log($"La partie commence ! Tour de : {CurrentPlayer}");
+    }
+
     public void SwitchTurn()
     {
         CurrentPlayer = (CurrentPlayer == ECampType.PLAYER_ONE) ? ECampType.PLAYER_TWO : ECampType.PLAYER_ONE;

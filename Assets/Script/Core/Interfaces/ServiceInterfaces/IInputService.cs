@@ -1,9 +1,11 @@
 using System;
 using UnityEngine;
+using YokaiNoMori.Interface;
 
 public interface IInputService 
 {
-    event Action<BoardCaseView> OnCellHoverChanged;
-    event Action<BoardCaseView> OnCellLeftClicked;
-    event Action<BoardCaseView> OnCellRightClicked;
+    event Action<CaseView> OnCellHoverChanged;
+    event Action<CaseView> OnCellLeftClicked;
+    event Action<CaseView> OnCellRightClicked;
+    event Action<IPawn> OnReservePawnClicked;
 }

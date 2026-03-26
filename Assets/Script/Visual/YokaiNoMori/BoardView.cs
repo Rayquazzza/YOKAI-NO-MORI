@@ -1,30 +1,95 @@
-using UnityEngine;
-using YokaiNoMori.Interface;
-using System.Collections.Generic;
 using System;
+using System.Collections.Generic;
+using UnityEngine;
+using YokaiNoMori.Enumeration;
+using YokaiNoMori.Interface;
 
 public class BoardView : MonoBehaviour
 {
     [Header("Prefabs")]
-    [SerializeField] private BoardCaseView casePrefab; 
-    [Header("Settings")]
-    [SerializeField] private float spacing = 1.1f; 
+    [SerializeField] private CaseView casePrefab;
+    [SerializeField] private PawnView playerPawnPrefab;
+
+    [Space(10)]
+    [Header("Grid Settings")]
+    [SerializeField] private float spacing = 1.1f;
+    [SerializeField] private GameObject caseParent;
+    [SerializeField] private GameObject pawnParent;
+    [SerializeField] private PawnRetrieveView pieceRetrieveView;
+
+    [Space(10)]
+    [Header("Visuals")]
+    [SerializeField] private PawnVisualRegistry pawnVisualRegistry;
+
+    private Dictionary<IPawn, PawnView> pawnMap = new Dictionary<IPawn, PawnView>();
+    private Dictionary<Vector2Int, CaseView> caseMap = new Dictionary<Vector2Int, CaseView>();
+
+    private int width;
+    private int height;
 
     private IGridService gridService;
 
     private void Awake()
     {
-        // On récupère le service dès le réveil
         gridService = GameServiceLocator.Get<IGridService>();
 
-        // S'abonner à l'événement
         gridService.OnGridInitialized += CreateVisualGrid;
+        gridService.OnPawnCreated += HandlePawnCreated;
+        gridService.OnPawnCaptured += HandleCaptureVisual;
+        gridService.OnPawnMoved += HandlePawnMoved;
+    }
+
+    private void HandlePawnMoved(IPawn pawn, Vector2Int newPosition)
+    {
+        if (pawnMap.TryGetValue(pawn, out PawnView visualPawn))
+        {
+            Vector3 targetWorldPos = GetWorldPosition(width, height, spacing, newPosition.x, newPosition.y);
+
+            visualPawn.MoveTo(targetWorldPos);
+        }
+    }
+
+    private void HandleCaptureVisual(IPawn victim, ICompetitor catcher)
+    {
+        if (pawnMap.TryGetValue(victim, out PawnView visualPawn))
+        {
+            int index = catcher.GetReserve().Count - 1;
+            Vector3 targetPos = pieceRetrieveView.GetReservePosition(index, catcher.GetCamp());
+
+            visualPawn.MoveToReserve(targetPos, catcher.GetCamp());
+        }
+    }
+
+    private void HandlePawnCreated(SOnPawnCreated data)
+    {
+        CreateVisualPawn(data);
+    }
+
+    private void CreateVisualPawn(SOnPawnCreated data)
+    {
+        Vector2Int logicalPos = data.Position;
+        Vector3 worldPos = GetWorldPosition(width, height, spacing, logicalPos.x, logicalPos.y);
+
+        Quaternion rotation = Quaternion.identity;
+
+        if (data.Owner.GetCamp() == ECampType.PLAYER_TWO)
+        {
+            rotation = Quaternion.Euler(0, 180, 0);
+        }
+
+        PawnView pawnInstance = Instantiate(playerPawnPrefab, worldPos, rotation, pawnParent.transform);
+
+        pawnInstance.name = $"Pawn_{logicalPos.x}_{logicalPos.y}";
+        pawnMap.Add(data.Pawn, pawnInstance);
+
+        Sprite pawnSprite = pawnVisualRegistry.GetPawnSprite(data.PawnType);
+        pawnInstance.Setup(pawnSprite);
     }
 
     private void CreateVisualGrid(Vector2Int size)
     {
-        int width = size.x;
-        int height = size.y;
+        width = size.x;
+        height = size.y;
 
         List<IBoardCase> allCases = gridService.GetAllBoardCase();
 
@@ -36,15 +101,16 @@ public class BoardView : MonoBehaviour
                 Vector2Int logicalPos = new Vector2Int(x, z);
                 IBoardCase boardCase = gridService.GetBoardCaseByPosition(logicalPos);
 
-                if (boardCase != null) 
+                if (boardCase != null)
                 {
                     Vector3 worldPos = GetWorldPosition(width, height, spacing, x, z);
 
-                    BoardCaseView caseInstance = Instantiate(casePrefab, worldPos, Quaternion.identity, this.transform);
+                    CaseView caseInstance = Instantiate(casePrefab, worldPos, Quaternion.identity, caseParent.transform);
 
                     caseInstance.Setup(boardCase);
 
                     caseInstance.name = $"Case_{x}_{z}";
+                    caseMap.Add(logicalPos, caseInstance);
                 }
             }
         }
@@ -60,9 +126,12 @@ public class BoardView : MonoBehaviour
     private void OnDestroy()
     {
         // Toujours se désabonner des événements quand l'objet est détruit
-        if (gridService != null)
-        {
-            gridService.OnGridInitialized -= CreateVisualGrid;
-        }
+        if (gridService == null) return;
+        
+        gridService.OnGridInitialized -= CreateVisualGrid;
+        gridService.OnPawnCreated -= HandlePawnCreated;
+        gridService.OnPawnCaptured -= HandleCaptureVisual;
+        gridService.OnPawnMoved -= HandlePawnMoved;
+
     }
 }

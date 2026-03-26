@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 using YokaiNoMori.Enumeration;
 using YokaiNoMori.Interface;
@@ -10,6 +11,8 @@ public class SelectionHandler : MonoBehaviour
 
     private IPawn selectedPawn;
 
+    private bool isParachuting = false;
+
     private void Start()
     {
         inputService = GameServiceLocator.Get<IInputService>();
@@ -17,24 +20,39 @@ public class SelectionHandler : MonoBehaviour
         turnService = GameServiceLocator.Get<ITurnService>();
 
         inputService.OnCellLeftClicked += HandleCellClick;
+        inputService.OnReservePawnClicked += HandleReservePawnClick;
     }
 
-    private void HandleCellClick(BoardCaseView caseView)
+    private void HandleReservePawnClick(IPawn pawn)
     {
-        IBoardCase boardCase = caseView.GetModel(); 
+        // On vérifie que c'est bien le tour du proprio du pion
+        if (pawn.GetCurrentOwner().GetCamp() == turnService.GetCurrentTurn())
+        {
+            selectedPawn = pawn;
+            isParachuting = true;
+            Debug.Log("Pion prêt à être parachuté !");
+            // Tu peux ajouter un highlight visuel ici sur les cases vides
+        }
+    }
 
+    private void HandleCellClick(CaseView caseView)
+    {
         if (selectedPawn == null)
         {
-            if (boardCase.IsBusy() && boardCase.GetPawnOnIt().GetCurrentOwner().GetCamp() == turnService.GetCurrentTurn())
+            if (caseView.GetModel().IsBusy() && caseView.GetModel().GetPawnOnIt().GetCurrentOwner().GetCamp() == turnService.GetCurrentTurn())
             {
-                selectedPawn = boardCase.GetPawnOnIt();
+                selectedPawn = caseView.GetModel().GetPawnOnIt();
+                isParachuting = false;
                 caseView.Highlight(true);
             }
         }
         else
         {
-            engine.DoAction(selectedPawn, boardCase.GetPosition(), EActionType.MOVE);
+            EActionType action = isParachuting ? EActionType.PARACHUTE : EActionType.MOVE;
+            engine.DoAction(selectedPawn, caseView.GetModel().GetPosition(), action);
+
             selectedPawn = null;
+            isParachuting = false;
         }
     }
 }

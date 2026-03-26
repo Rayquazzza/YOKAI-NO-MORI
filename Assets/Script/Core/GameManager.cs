@@ -6,6 +6,8 @@ public class GameManager : MonoBehaviour
 {
     private IGridService grid;
     private IGameStateService gameState;
+    private ITurnService turnService;
+    private IPlayersService playersService;
     private void Start()
     {
         GetServices();
@@ -16,6 +18,7 @@ public class GameManager : MonoBehaviour
     {
         gameState = GameServiceLocator.Get<IGameStateService>();
         grid = GameServiceLocator.Get<IGridService>();
+        turnService = GameServiceLocator.Get<ITurnService>();
     }
 
     private void Initialize()
@@ -25,8 +28,11 @@ public class GameManager : MonoBehaviour
         // Création des joueurs
         Player p1 = new Player(ECampType.PLAYER_ONE);
         Player p2 = new Player(ECampType.PLAYER_TWO);
+        playersService.RegisterPlayers(p1, p2);
 
         grid.SpawnInitialPieces(p1, p2);
+
+        turnService.SetStartingPlayer(ECampType.PLAYER_ONE);
 
         // Lancer le moteur
         Debug.Log("Le plateau est prêt !");

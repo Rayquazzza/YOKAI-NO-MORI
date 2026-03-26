@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 1019819363122822693}
   - component: {fileID: 3186091372790583153}
   - component: {fileID: 7084854546900441652}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: BoardCaseView
   m_TagString: Untagged
   m_Icon: {fileID: 0}

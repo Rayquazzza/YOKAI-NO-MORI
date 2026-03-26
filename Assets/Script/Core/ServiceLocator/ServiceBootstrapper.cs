@@ -5,7 +5,7 @@ using UnityEngine;
 
 public class ServiceBootstrapper : MonoBehaviour
 {
-    private List<IDisposableService> _services = new List<IDisposableService>();
+    private List<IDisposableService> services = new List<IDisposableService>();
 
     private void Awake()
     {
@@ -19,8 +19,9 @@ public class ServiceBootstrapper : MonoBehaviour
       {
             new BoardGridService(),
             new GameStateService(),
-            new YokaiEngine(),
             new TurnService(),
+            new YokaiEngine(),
+            new PlayersService(),
         // Add other services here
     };
 
@@ -29,7 +30,7 @@ public class ServiceBootstrapper : MonoBehaviour
         {
             if (service is IDisposableService disposableService)
             {
-                _services.Add(disposableService);
+                this.services.Add(disposableService);
             }
             else
             {
@@ -40,7 +41,7 @@ public class ServiceBootstrapper : MonoBehaviour
 
     private void Start()
     {
-        foreach(var service in _services)
+        foreach(var service in services)
         {
            if( service != null) service.Init();
         }
@@ -49,7 +50,7 @@ public class ServiceBootstrapper : MonoBehaviour
 
     private void OnDestroy()
     {
-        foreach(var service in _services)
+        foreach(var service in services)
         {
             if (service != null) service.Dispose();
         }

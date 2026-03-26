@@ -10,16 +10,18 @@ public class YokaiEngine : IGameManager, IDisposableService
     private SAction lastAction;
 
     private IGridService gridService;
+    private ITurnService turnService;
 
     public YokaiEngine()
     {
         GameServiceLocator.Register<IGameManager>(this);
-        gridService = GameServiceLocator.Get<IGridService>();
+        
     }
 
     public void Init()
     {
-      
+        gridService = GameServiceLocator.Get<IGridService>();
+        turnService = GameServiceLocator.Get<ITurnService>();
     }
 
     public void Dispose()
@@ -29,51 +31,83 @@ public class YokaiEngine : IGameManager, IDisposableService
 
     public void DoAction(IPawn pawnTarget, Vector2Int destination, EActionType actionType)
     {
-        // --- 1. VÉRIFICATION ---
-        // Est-ce que la destination est valide pour ce pion ?
-        List<Vector2Int> possibleMoves = GetValidMoves(pawnTarget);
-        if (!possibleMoves.Contains(destination))
-        {
-            Debug.LogWarning("Mouvement invalide !");
-            return;
-        }
 
-        // --- 2. EXÉCUTION ---
         IBoardCase targetCase = gridService.GetBoardCaseByPosition(destination);
 
-        // Cas d'une capture
-        if (targetCase.IsBusy())
+        if (actionType == EActionType.PARACHUTE)
         {
-            Capture(targetCase.GetPawnOnIt(), pawnTarget.GetCurrentOwner());
+            // --- LOGIQUE PARACHUTAGE ---
+            if (targetCase.IsBusy()) return; // On ne peut pas parachuter sur quelqu'un
+
+            // 1. Retirer de la réserve du joueur
+            pawnTarget.GetCurrentOwner().RemoveFromReserve(pawnTarget);
+
+            // 2. Placer sur la nouvelle case
+            targetCase.SetPawn(pawnTarget);
+            ((BoardPiece)pawnTarget).SetPosition(destination, targetCase);
+
+            // 3. Alerter la vue (on réutilise le même trigger car le pion "bouge" vers la case)
+            (gridService as BoardGridService)?.TriggerOnPawnMoved(pawnTarget, destination);
         }
+        else if(actionType == EActionType.MOVE)
+        {
+            // --- 1. VÉRIFICATION ---
+            List<Vector2Int> possibleMoves = GetValidMoves(pawnTarget);
+            if (!possibleMoves.Contains(destination)) return;
 
-        // Déplacement physique (Logique)
-        // On vide l'ancienne case
-        pawnTarget.GetCurrentBoardCase().SetPawn(null);
+            // --- 2. EXÉCUTION ---
+            IBoardCase oldCase = pawnTarget.GetCurrentBoardCase();
 
-        // On remplit la nouvelle
-        targetCase.SetPawn(pawnTarget);
+            // Cas d'une capture
+            if (targetCase.IsBusy())
+            {
+                IPawn victim = targetCase.GetPawnOnIt();
+                Capture(victim, pawnTarget.GetCurrentOwner());
 
-        // On met à jour la position interne du pion (Il faut ajouter SetPosition dans BoardPiece)
-        ((BoardPiece)pawnTarget).SetPosition(destination, targetCase);
+                // CRUCIAL : On vide la case cible car le mort part en réserve !
+                targetCase.SetPawn(null);
+            }
+
+            // On vide l'ancienne case
+            oldCase.SetPawn(null);
+
+            // On remplit la nouvelle
+            targetCase.SetPawn(pawnTarget);
+
+            // On met à jour la donnée du pion (position interne)
+            ((BoardPiece)pawnTarget).SetPosition(destination, targetCase);
+
+            (gridService as BoardGridService)?.TriggerOnPawnMoved(pawnTarget, destination);
+        }
+           
+
+        // ... suite du code (LastAction, Turn, etc.)
+
+        lastAction.SetAction(pawnTarget.GetCurrentOwner().GetCamp(), pawnTarget.GetPawnType(), actionType, pawnTarget.GetCurrentPosition(), destination, targetCase.GetPawnOnIt());
+
+        Debug.Log($"Action effectuée : {actionType} - {pawnTarget.GetPawnType()} déplacé de {lastAction.StartPosition} à {lastAction.NewPosition}");
+
 
         // --- 3. RÈGLES SPÉCIALES & FIN DE TOUR ---
+
         CheckPromotion(pawnTarget, destination);
+
         CheckVictory();
 
-        // On change le tour dans le GameState
-        var turnService = GameServiceLocator.Get<ITurnService>();
         turnService.SwitchTurn();
+
     }
+
+
 
     private void CheckVictory()
     {
-       
+
     }
 
     private void CheckPromotion(IPawn pawnTarget, Vector2Int destination)
     {
-       
+
     }
 
     private void Capture(IPawn victim, ICompetitor catcher)
@@ -84,23 +118,27 @@ public class YokaiEngine : IGameManager, IDisposableService
             // Tu auras besoin d'une méthode ResetPromotion() dans BoardPiece
         }
 
-    // 2. Changement de camp
-    // Tu auras besoin d'un SetOwner() dans BoardPiece
+        catcher.AddToReserve(victim);
+
+        // 2. Changement de camp
+        // Tu auras besoin d'un SetOwner() dans BoardPiece
         ((BoardPiece)victim).SetOwner(catcher);
 
-        // 3. Envoyer dans la réserve
-        // Tu devras créer un ReserveService plus tard pour stocker ces pions
+        (gridService as BoardGridService)?.TriggerOnPawnCaptured(victim, catcher);
+
+        catcher.AddToReserve(victim);
+
         Debug.Log($"{victim.GetPawnType()} capturé par {catcher.GetCamp()}");
     }
 
     public List<IBoardCase> GetAllBoardCase()
     {
-         return gridService.GetAllBoardCase();
+        return gridService.GetAllBoardCase();
     }
 
     public List<IPawn> GetAllPawn()
     {
-       return gridService.GetAllPawn();
+        return gridService.GetAllPawn();
     }
 
     public SAction GetLastAction()
@@ -115,13 +153,14 @@ public class YokaiEngine : IGameManager, IDisposableService
 
     public List<IPawn> GetReservePawnsByPlayer(ECampType campType)
     {
-        throw new System.NotImplementedException();
+        var player = GameServiceLocator.Get<IPlayersService>().GetPlayer(campType);
+        return player.GetReserve();
     }
 
     public List<Vector2Int> GetValidMoves(IPawn pawn)
     {
-        List<Vector2Int> validPositions = new List<Vector2Int>();
         Vector2Int currentPos = pawn.GetCurrentPosition();
+        List<Vector2Int> validPositions = new List<Vector2Int>();
 
         foreach (Vector2Int dir in pawn.GetDirections())
         {

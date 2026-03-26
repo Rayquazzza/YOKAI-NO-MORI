@@ -12,6 +12,9 @@ public class BoardGridService : IGridService
     private int height = 4;
 
     public event Action<Vector2Int> OnGridInitialized;
+    public event Action<SOnPawnCreated> OnPawnCreated;
+    public event Action<IPawn, ICompetitor> OnPawnCaptured;
+    public event Action<IPawn, Vector2Int> OnPawnMoved;
 
     public BoardGridService()
     {
@@ -26,6 +29,11 @@ public class BoardGridService : IGridService
     public void Dispose()
     {
         GameServiceLocator.Unregister<IGridService>();
+    }
+
+    public void TriggerOnPawnCaptured(IPawn victim, ICompetitor catcher)
+    {
+        OnPawnCaptured?.Invoke(victim, catcher);
     }
 
     public void InitializeGrid(int width, int height)
@@ -105,6 +113,9 @@ public class BoardGridService : IGridService
         BoardPiece newPawn = new BoardPiece(instanceData);
 
         caseRef.SetPawn(newPawn);
+
+        var structData = new SOnPawnCreated(newPawn, pos, owner, type);
+        OnPawnCreated?.Invoke(structData);
     }
 
     private List<Vector2Int> GetDirectionsForType(EPawnType type, ECampType camp)
@@ -117,31 +128,36 @@ public class BoardGridService : IGridService
             case EPawnType.Kodama:
                 d.Add(new Vector2Int(0, forward));
                 break;
-            case EPawnType.Koropokkuru: // 8 directions
+            case EPawnType.Koropokkuru:
                 for (int x = -1; x <= 1; x++)
                     for (int y = -1; y <= 1; y++)
                         if (x != 0 || y != 0) d.Add(new Vector2Int(x, y));
                 break;
-            case EPawnType.Kitsune: // Diagonales
+            case EPawnType.Kitsune: 
                 d.Add(new Vector2Int(1, 1)); d.Add(new Vector2Int(-1, 1));
                 d.Add(new Vector2Int(1, -1)); d.Add(new Vector2Int(-1, -1));
                 break;
 
-            case EPawnType.Tanuki: // Croix (Horizontal/Vertical)
+            case EPawnType.Tanuki: 
                 d.Add(new Vector2Int(0, 1)); d.Add(new Vector2Int(0, -1));
                 d.Add(new Vector2Int(1, 0)); d.Add(new Vector2Int(-1, 0));
                 break;
 
-            case EPawnType.KodamaSamurai: // Tout sauf diagonales arrière
-                                          // On réutilise le forward du camp
-                d.Add(new Vector2Int(0, forward));  // Avant
-                d.Add(new Vector2Int(1, forward));  // Diag avant droite
-                d.Add(new Vector2Int(-1, forward)); // Diag avant gauche
-                d.Add(new Vector2Int(1, 0));        // Droite
-                d.Add(new Vector2Int(-1, 0));       // Gauche
-                d.Add(new Vector2Int(0, -forward)); // Arrière
+            case EPawnType.KodamaSamurai: 
+                                          
+                d.Add(new Vector2Int(0, forward));  
+                d.Add(new Vector2Int(1, forward));  
+                d.Add(new Vector2Int(-1, forward)); 
+                d.Add(new Vector2Int(1, 0));       
+                d.Add(new Vector2Int(-1, 0));      
+                d.Add(new Vector2Int(0, -forward)); 
                 break;         
         }
         return d;
+    }
+
+    public void TriggerOnPawnMoved(IPawn pawnTarget, Vector2Int destination)
+    {
+       OnPawnMoved?.Invoke(pawnTarget, destination);
     }
 }
