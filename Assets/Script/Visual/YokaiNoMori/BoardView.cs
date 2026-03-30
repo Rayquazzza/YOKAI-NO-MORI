@@ -15,7 +15,7 @@ public class BoardView : MonoBehaviour
     [SerializeField] private float spacing = 1.1f;
     [SerializeField] private GameObject caseParent;
     [SerializeField] private GameObject pawnParent;
-    [SerializeField] private PawnRetrieveView pieceRetrieveView;
+    [SerializeField] private RetrieveView RetrieveView;
 
     [Space(10)]
     [Header("Visuals")]
@@ -54,7 +54,7 @@ public class BoardView : MonoBehaviour
         if (pawnMap.TryGetValue(victim, out PawnView visualPawn))
         {
             int index = catcher.GetReserve().Count - 1;
-            Vector3 targetPos = pieceRetrieveView.GetReservePosition(index, catcher.GetCamp());
+            Vector3 targetPos = RetrieveView.GetReservePosition(index, catcher.GetCamp());
 
             visualPawn.MoveToReserve(targetPos, catcher.GetCamp());
         }

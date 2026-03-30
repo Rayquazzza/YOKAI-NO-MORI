@@ -8,6 +8,7 @@ public class GameManager : MonoBehaviour
     private IGameStateService gameState;
     private ITurnService turnService;
     private IPlayersService playersService;
+
     private void Start()
     {
         GetServices();
@@ -19,6 +20,7 @@ public class GameManager : MonoBehaviour
         gameState = GameServiceLocator.Get<IGameStateService>();
         grid = GameServiceLocator.Get<IGridService>();
         turnService = GameServiceLocator.Get<ITurnService>();
+        playersService = GameServiceLocator.Get<IPlayersService>();
     }
 
     private void Initialize()

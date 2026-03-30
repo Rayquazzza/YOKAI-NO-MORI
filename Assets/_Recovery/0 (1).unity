@@ -144,7 +144,7 @@ Transform:
   m_GameObject: {fileID: 2203213}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -3, y: 0, z: 2.5}
+  m_LocalPosition: {x: 3, y: 0, z: -2.5}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -175,7 +175,7 @@ Transform:
   m_GameObject: {fileID: 151621092}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 3, y: 0, z: -2.5}
+  m_LocalPosition: {x: -3, y: 0, z: 2.5}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -190,7 +190,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 194448505}
-  - component: {fileID: 194448506}
+  - component: {fileID: 194448504}
   m_Layer: 0
   m_Name: "\u265F\uFE0FRETRIEVE"
   m_TagString: Untagged
@@ -198,6 +198,22 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
+--- !u!114 &194448504
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 194448503}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 87184bae99e042343b1402eb017f8e7b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PieceRetrieveView
+  anchorP1: {fileID: 151621093}
+  anchorP2: {fileID: 2203214}
+  slotSpacing: 1.2
+  maxPerRow: 2
 --- !u!4 &194448505
 Transform:
   m_ObjectHideFlags: 0
@@ -215,22 +231,6 @@ Transform:
   - {fileID: 2203214}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &194448506
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 194448503}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fedbae301c93e3b46991109671a9932b, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::RetrieveView
-  anchorP1: {fileID: 151621093}
-  anchorP2: {fileID: 2203214}
-  slotSpacing: 1.2
-  maxPerRow: 2
 --- !u!1 &300036136
 GameObject:
   m_ObjectHideFlags: 0
@@ -900,7 +900,7 @@ MonoBehaviour:
   spacing: 1.1
   caseParent: {fileID: 1054747661}
   pawnParent: {fileID: 542938919}
-  RetrieveView: {fileID: 194448506}
+  pieceRetrieveView: {fileID: 194448504}
   pawnVisualRegistry: {fileID: 11400000, guid: 01e088276c62fca46b4fdb74cbdd2f16, type: 2}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:

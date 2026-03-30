@@ -1,7 +1,7 @@
 using UnityEngine;
 using YokaiNoMori.Enumeration;
 
-public class PawnRetrieveView : MonoBehaviour
+public class RetrieveView : MonoBehaviour
 {
     [SerializeField] private Transform anchorP1;
     [SerializeField] private Transform anchorP2;

@@ -1,4 +1,4 @@
-using System;
+Ôªøusing System;
 using System.Collections.Generic;
 using UnityEngine;
 using YokaiNoMori.Enumeration;
@@ -31,6 +31,7 @@ public class YokaiEngine : IGameManager, IDisposableService
 
     public void DoAction(IPawn pawnTarget, Vector2Int destination, EActionType actionType)
     {
+        Vector2Int startPos = pawnTarget.GetCurrentPosition();
 
         IBoardCase targetCase = gridService.GetBoardCaseByPosition(destination);
 
@@ -39,23 +40,23 @@ public class YokaiEngine : IGameManager, IDisposableService
             // --- LOGIQUE PARACHUTAGE ---
             if (targetCase.IsBusy()) return; // On ne peut pas parachuter sur quelqu'un
 
-            // 1. Retirer de la rÈserve du joueur
+            // 1. Retirer de la r√©serve du joueur
             pawnTarget.GetCurrentOwner().RemoveFromReserve(pawnTarget);
 
             // 2. Placer sur la nouvelle case
             targetCase.SetPawn(pawnTarget);
             ((BoardPiece)pawnTarget).SetPosition(destination, targetCase);
 
-            // 3. Alerter la vue (on rÈutilise le mÍme trigger car le pion "bouge" vers la case)
+            // 3. Alerter la vue (on r√©utilise le m√™me trigger car le pion "bouge" vers la case)
             (gridService as BoardGridService)?.TriggerOnPawnMoved(pawnTarget, destination);
         }
         else if(actionType == EActionType.MOVE)
         {
-            // --- 1. V…RIFICATION ---
+            // --- 1. V√âRIFICATION ---
             List<Vector2Int> possibleMoves = GetValidMoves(pawnTarget);
             if (!possibleMoves.Contains(destination)) return;
 
-            // --- 2. EX…CUTION ---
+            // --- 2. EX√âCUTION ---
             IBoardCase oldCase = pawnTarget.GetCurrentBoardCase();
 
             // Cas d'une capture
@@ -64,7 +65,7 @@ public class YokaiEngine : IGameManager, IDisposableService
                 IPawn victim = targetCase.GetPawnOnIt();
                 Capture(victim, pawnTarget.GetCurrentOwner());
 
-                // CRUCIAL : On vide la case cible car le mort part en rÈserve !
+                // CRUCIAL : On vide la case cible car le mort part en r√©serve !
                 targetCase.SetPawn(null);
             }
 
@@ -74,21 +75,24 @@ public class YokaiEngine : IGameManager, IDisposableService
             // On remplit la nouvelle
             targetCase.SetPawn(pawnTarget);
 
-            // On met ‡ jour la donnÈe du pion (position interne)
+            // On met √† jour la donn√©e du pion (position interne)
             ((BoardPiece)pawnTarget).SetPosition(destination, targetCase);
 
             (gridService as BoardGridService)?.TriggerOnPawnMoved(pawnTarget, destination);
         }
-           
+
 
         // ... suite du code (LastAction, Turn, etc.)
 
-        lastAction.SetAction(pawnTarget.GetCurrentOwner().GetCamp(), pawnTarget.GetPawnType(), actionType, pawnTarget.GetCurrentPosition(), destination, targetCase.GetPawnOnIt());
+        lastAction.SetAction(pawnTarget.GetCurrentOwner().GetCamp(),
+                         pawnTarget.GetPawnType(), actionType,
+                         startPos,        // ‚Üê correct
+                         destination,
+                         targetCase.GetPawnOnIt());
+        Debug.Log($"Action effectu√©e : {actionType} - {pawnTarget.GetPawnType()} d√©plac√© de {lastAction.StartPosition} √† {lastAction.NewPosition}");
 
-        Debug.Log($"Action effectuÈe : {actionType} - {pawnTarget.GetPawnType()} dÈplacÈ de {lastAction.StartPosition} ‡ {lastAction.NewPosition}");
 
-
-        // --- 3. R»GLES SP…CIALES & FIN DE TOUR ---
+        // --- 3. R√àGLES SP√âCIALES & FIN DE TOUR ---
 
         CheckPromotion(pawnTarget, destination);
 
@@ -112,10 +116,11 @@ public class YokaiEngine : IGameManager, IDisposableService
 
     private void Capture(IPawn victim, ICompetitor catcher)
     {
-        // 1. Reset de la promotion (Si c'Ètait un SamouraÔ, il redevient Kodama)
+
+        // 1. Reset de la promotion (Si c'√©tait un Samoura√Ø, il redevient Kodama)
         if (victim.GetPawnType() == EPawnType.KodamaSamurai)
         {
-            // Tu auras besoin d'une mÈthode ResetPromotion() dans BoardPiece
+            // Tu auras besoin d'une m√©thode ResetPromotion() dans BoardPiece
         }
 
         catcher.AddToReserve(victim);
@@ -126,9 +131,7 @@ public class YokaiEngine : IGameManager, IDisposableService
 
         (gridService as BoardGridService)?.TriggerOnPawnCaptured(victim, catcher);
 
-        catcher.AddToReserve(victim);
-
-        Debug.Log($"{victim.GetPawnType()} capturÈ par {catcher.GetCamp()}");
+        Debug.Log($"{victim.GetPawnType()} captur√© par {catcher.GetCamp()}");
     }
 
     public List<IBoardCase> GetAllBoardCase()
@@ -170,7 +173,7 @@ public class YokaiEngine : IGameManager, IDisposableService
             IBoardCase targetCase = gridService.GetBoardCaseByPosition(targetPos);
             if (targetCase == null) continue;
 
-            // 2. Est-ce occupÈ par un alliÈ ?
+            // 2. Est-ce occup√© par un alli√© ?
             if (targetCase.IsBusy())
             {
                 if (targetCase.GetPawnOnIt().GetCurrentOwner() == pawn.GetCurrentOwner())
