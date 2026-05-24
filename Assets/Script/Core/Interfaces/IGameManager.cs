@@ -47,5 +47,7 @@ namespace YokaiNoMori.Interface
         /// Retrieve the last action
         /// </summary>
         public SAction GetLastAction();
+
+        public EActionType GetActionType(IPawn pawn);
     }
 }

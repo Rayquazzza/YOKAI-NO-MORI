@@ -38,8 +38,9 @@ namespace YokaiNoMori.Interface
         /// <returns>EPawnType</returns>
         public EPawnType GetPawnType();
 
-        void Promote();
-        
+        void Promote(List<Vector2Int> newDirections);
+
+
     }
 
 }
