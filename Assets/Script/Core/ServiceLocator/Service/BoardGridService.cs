@@ -11,14 +11,12 @@ public class BoardGridService : IGridService
     private int width = 3;
     private int height = 4;
 
-    public event Action<Vector2Int> OnGridInitialized;
-    public event Action<SOnPawnCreated> OnPawnCreated;
-    public event Action<IPawn, ICompetitor> OnPawnCaptured;
-    public event Action<IPawn, Vector2Int> OnPawnMoved;
+    private PawnDataLibrary pawnDataLibrary;
 
-    public BoardGridService()
+    public BoardGridService(PawnDataLibrary pawnDataLibrary)
     {
         GameServiceLocator.Register<IGridService>(this);
+        this.pawnDataLibrary = pawnDataLibrary;
     }
 
     public void Init()
@@ -29,11 +27,6 @@ public class BoardGridService : IGridService
     public void Dispose()
     {
         GameServiceLocator.Unregister<IGridService>();
-    }
-
-    public void TriggerOnPawnCaptured(IPawn victim, ICompetitor catcher)
-    {
-        OnPawnCaptured?.Invoke(victim, catcher);
     }
 
     public void InitializeGrid(int width, int height)
@@ -50,7 +43,9 @@ public class BoardGridService : IGridService
             }
         }
 
-        OnGridInitialized?.Invoke(new Vector2Int(width, height));
+        Vector2Int gridSize = new Vector2Int(width, height);
+        BoardEvent.Trigger(BoardEventType.GridInitialized, boardSize: gridSize);
+
     }
 
     public IBoardCase GetBoardCaseByPosition(Vector2Int position)
@@ -115,49 +110,18 @@ public class BoardGridService : IGridService
         caseRef.SetPawn(newPawn);
 
         var structData = new SOnPawnCreated(newPawn, pos, owner, type);
-        OnPawnCreated?.Invoke(structData);
+        BoardEvent.Trigger(BoardEventType.PawnCreated, pawn: newPawn, origin: pos, competitor: owner, pawnType: type);
     }
 
     private List<Vector2Int> GetDirectionsForType(EPawnType type, ECampType camp)
     {
-        int forward = (camp == ECampType.PLAYER_ONE) ? 1 : -1;
-        List<Vector2Int> d = new List<Vector2Int>();
-
-        switch (type)
+        if (pawnDataLibrary == null)
         {
-            case EPawnType.Kodama:
-                d.Add(new Vector2Int(0, forward));
-                break;
-            case EPawnType.Koropokkuru:
-                for (int x = -1; x <= 1; x++)
-                    for (int y = -1; y <= 1; y++)
-                        if (x != 0 || y != 0) d.Add(new Vector2Int(x, y));
-                break;
-            case EPawnType.Kitsune: 
-                d.Add(new Vector2Int(1, 1)); d.Add(new Vector2Int(-1, 1));
-                d.Add(new Vector2Int(1, -1)); d.Add(new Vector2Int(-1, -1));
-                break;
-
-            case EPawnType.Tanuki: 
-                d.Add(new Vector2Int(0, 1)); d.Add(new Vector2Int(0, -1));
-                d.Add(new Vector2Int(1, 0)); d.Add(new Vector2Int(-1, 0));
-                break;
-
-            case EPawnType.KodamaSamurai: 
-                                          
-                d.Add(new Vector2Int(0, forward));  
-                d.Add(new Vector2Int(1, forward));  
-                d.Add(new Vector2Int(-1, forward)); 
-                d.Add(new Vector2Int(1, 0));       
-                d.Add(new Vector2Int(-1, 0));      
-                d.Add(new Vector2Int(0, -forward)); 
-                break;         
+            Debug.LogError("[BoardGridService] La PawnDataLibrary est manquante ou nulle !");
+            return new List<Vector2Int>();
         }
-        return d;
+
+        return pawnDataLibrary.GetDirectionsForType(type, camp);
     }
 
-    public void TriggerOnPawnMoved(IPawn pawnTarget, Vector2Int destination)
-    {
-       OnPawnMoved?.Invoke(pawnTarget, destination);
-    }
 }

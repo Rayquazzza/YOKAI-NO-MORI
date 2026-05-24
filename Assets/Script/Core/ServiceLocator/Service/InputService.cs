@@ -6,14 +6,13 @@ public class InputService : MonoBehaviour, IInputService
 {
     public event Action<CaseView> OnCellHoverChanged;
     public event Action<CaseView> OnCellLeftClicked;
-    public event Action<CaseView> OnCellRightClicked;
-    public event Action<IPawn> OnReservePawnClicked;
+    public event Action<PawnView> OnPawnClicked;
 
-    private CaseView lastHovered;
+    private PawnView lastHovered;
 
     private IGameStateService gameStateService;
 
-   [SerializeField] private LayerMask boardLayerMask;
+    [SerializeField] private LayerMask pawnLayerMask;
 
 
     private void Awake()
@@ -36,38 +35,36 @@ public class InputService : MonoBehaviour, IInputService
 
     private void HandleMouseDetection()
     {
+        if (!Input.GetMouseButtonDown(0)) return;
+
         Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
 
-        if (Physics.Raycast(ray, out RaycastHit hit, boardLayerMask))
+        RaycastHit[] hits = Physics.RaycastAll(ray, 100f, pawnLayerMask);
+
+        PawnView clickedPawn = null;
+        CaseView clickedCase = null;
+
+        foreach (var hit in hits)
         {
-            CaseView current = hit.collider.GetComponentInParent<CaseView>();
-
-            if (current != lastHovered)
-            {
-                lastHovered?.Highlight(false);
-                lastHovered = current;
-
-                if (current != null)
-                {
-                    lastHovered.Highlight(true);
-                    OnCellHoverChanged?.Invoke(lastHovered);
-                }
-            }
-
-            if (current != null)
-            {
-                if (Input.GetMouseButtonDown(0)) OnCellLeftClicked?.Invoke(current);
-                if (Input.GetMouseButtonDown(1)) OnCellRightClicked?.Invoke(current);
-            }
+            if (clickedPawn == null) clickedPawn = hit.collider.GetComponent<PawnView>();
+            if (clickedCase == null) clickedCase = hit.collider.GetComponent<CaseView>();
         }
-        else { ClearHover(); }
+
+        if (clickedPawn != null && clickedCase == null)
+        {
+            OnPawnClicked?.Invoke(clickedPawn);
+        }
+        else if (clickedCase != null)
+        {
+            OnCellLeftClicked?.Invoke(clickedCase);
+        }
     }
 
     private void ClearHover()
     {
         if (lastHovered != null)
         {
-            lastHovered.Highlight(false);
+            //lastHovered.Highlight(false);
             lastHovered = null;
             OnCellHoverChanged?.Invoke(null);
         }

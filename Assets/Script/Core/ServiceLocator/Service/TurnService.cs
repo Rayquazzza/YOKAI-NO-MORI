@@ -33,5 +33,7 @@ public class TurnService : ITurnService
     public void SwitchTurn()
     {
         CurrentPlayer = (CurrentPlayer == ECampType.PLAYER_ONE) ? ECampType.PLAYER_TWO : ECampType.PLAYER_ONE;
+
+        Debug.Log($"Changement de tour ! Tour de : {CurrentPlayer}");
     }
 }
