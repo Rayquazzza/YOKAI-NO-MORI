@@ -1,4 +1,3 @@
-using System;
 using UnityEngine;
 using YokaiNoMori.Enumeration;
 using YokaiNoMori.Interface;
@@ -6,53 +5,66 @@ using YokaiNoMori.Interface;
 public class SelectionHandler : MonoBehaviour
 {
     private IInputService inputService;
-    private IGameManager engine;
     private ITurnService turnService;
-
     private IPawn selectedPawn;
-
-    private bool isParachuting = false;
 
     private void Start()
     {
         inputService = GameServiceLocator.Get<IInputService>();
-        engine = GameServiceLocator.Get<IGameManager>();
         turnService = GameServiceLocator.Get<ITurnService>();
-
-        inputService.OnCellLeftClicked += HandleCellClick;
-        inputService.OnReservePawnClicked += HandleReservePawnClick;
+        inputService.OnCellLeftClicked += HandleBoardClick;
+        inputService.OnPawnClicked += HandleReserveClick;
     }
 
-    private void HandleReservePawnClick(IPawn pawn)
+    private void HandleBoardClick(CaseView caseView)
     {
-        // On vérifie que c'est bien le tour du proprio du pion
-        if (pawn.GetCurrentOwner().GetCamp() == turnService.GetCurrentTurn())
-        {
-            selectedPawn = pawn;
-            isParachuting = true;
-            Debug.Log("Pion prêt à être parachuté !");
-            // Tu peux ajouter un highlight visuel ici sur les cases vides
-        }
-    }
+        IBoardCase boardCase = caseView.GetModel();
+        ECampType currentTurn = turnService.GetCurrentTurn();
 
-    private void HandleCellClick(CaseView caseView)
-    {
         if (selectedPawn == null)
         {
-            if (caseView.GetModel().IsBusy() && caseView.GetModel().GetPawnOnIt().GetCurrentOwner().GetCamp() == turnService.GetCurrentTurn())
-            {
-                selectedPawn = caseView.GetModel().GetPawnOnIt();
-                isParachuting = false;
-                caseView.Highlight(true);
-            }
+            if (boardCase.IsBusy() && boardCase.GetPawnOnIt().GetCurrentOwner().GetCamp() == currentTurn)
+                SelectPawn(boardCase.GetPawnOnIt());
+            return;
+        }
+
+        if (boardCase.IsBusy() && boardCase.GetPawnOnIt().GetCurrentOwner().GetCamp() == currentTurn)
+        {
+            SelectPawn(boardCase.GetPawnOnIt());
         }
         else
         {
-            EActionType action = isParachuting ? EActionType.PARACHUTE : EActionType.MOVE;
-            engine.DoAction(selectedPawn, caseView.GetModel().GetPosition(), action);
-
-            selectedPawn = null;
-            isParachuting = false;
+            EActionType action = GetActionType(selectedPawn);
+            BoardEvent.Trigger(BoardEventType.ActionRequested,
+                pawn: selectedPawn,
+                destination: boardCase.GetPosition(),
+                actionType: action);
+            DeselectPawn();
         }
+    }
+
+    private void HandleReserveClick(PawnView pawnView)
+    {
+        IPawn clickedPawn = pawnView.GetModel();
+        if (clickedPawn.GetCurrentOwner().GetCamp() == turnService.GetCurrentTurn())
+            SelectPawn(clickedPawn);
+    }
+
+    private void SelectPawn(IPawn pawn)
+    {
+        selectedPawn = pawn;
+        BoardEvent.Trigger(BoardEventType.PawnSelected, pawn: pawn);
+    }
+
+    private void DeselectPawn() => selectedPawn = null;
+
+    private EActionType GetActionType(IPawn pawn)
+        => pawn.GetCurrentOwner().GetReserve().Contains(pawn) ? EActionType.PARACHUTE : EActionType.MOVE;
+
+    private void OnDestroy()
+    {
+        if (inputService == null) return;
+        inputService.OnCellLeftClicked -= HandleBoardClick;
+        inputService.OnPawnClicked -= HandleReserveClick;
     }
 }

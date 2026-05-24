@@ -41,10 +41,18 @@ public class BoardPiece : IPawn
       return pawnType;
     }
 
-    public void Promote()
+    public void Promote(List<Vector2Int> newDirections)
     {
-       
+        pawnType = EPawnType.KodamaSamurai;
+        directions = newDirections;
     }
+
+    public void Demote(List<Vector2Int> baseDirections)
+    {
+        pawnType = EPawnType.Kodama;
+        directions = baseDirections;
+    }
+
     public void SetOwner(ICompetitor newOwner)
     {
         owner = newOwner;
