@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: da25a2cc0f0865242848bfe006a969cc, type: 3}
+  m_Name: YKNMGameSettings
+  m_EditorClassIdentifier: Assembly-CSharp::YKNMGameSettings
+  MoveDuration: 0.4
+  CaptureDuration: 0.3
+  ParachuteDuration: 0.35
+  PromotionDuration: 0.5
+  PostActionDelay: 0.1
+  CameraRotationDuration: 0.5
+  CameraRotationP1: 0
+  CameraRotationP2: 180
+  MoveTweenType: 5
+  CaptureTweenType: 3
+  ParachuteTweenType: 5
+  CameraRotationTweenType: 6
