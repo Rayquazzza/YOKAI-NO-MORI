@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 3186091372790583153}
   - component: {fileID: 7084854546900441652}
   m_Layer: 6
-  m_Name: BoardCaseView
+  m_Name: CaseView
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
