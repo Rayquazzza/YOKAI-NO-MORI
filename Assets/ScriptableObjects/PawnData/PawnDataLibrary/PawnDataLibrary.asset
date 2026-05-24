@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2a1cb956d7053284cbae56aa63137317, type: 3}
+  m_Name: PawnDataLibrary
+  m_EditorClassIdentifier: Assembly-CSharp::PawnDataLibrary
+  allPawnData:
+  - {fileID: 11400000, guid: 820ebde0251d8e647bbdcc0538c58faa, type: 2}
+  - {fileID: 11400000, guid: 4434ff97413674542a68f24ceca2f546, type: 2}
+  - {fileID: 11400000, guid: 8620bfe9e4930c04a8db0cfd815db46c, type: 2}
+  - {fileID: 11400000, guid: c58d1ace52e356c4fb8f682d0301b805, type: 2}
+  - {fileID: 11400000, guid: 090904c919e06484994d8e5ef04a69c2, type: 2}
